@@ -7,20 +7,33 @@ import joblib
 st.set_page_config(page_title="Student Depression Risk", page_icon="🧠", layout="centered")
 
 BASE_DIR = os.path.dirname(__file__)
-MODEL_PATH = os.path.join(BASE_DIR, "model_artifacts", "depression_gbc.pkl")
-FEATURE_PATH = os.path.join(BASE_DIR, "model_artifacts", "feature_columns.json")
+MODEL_CANDIDATES = [
+    os.path.join(BASE_DIR, "depression_gbc.pkl"),
+    os.path.join(BASE_DIR, "model_artifacts", "depression_gbc.pkl"),
+]
+FEATURE_CANDIDATES = [
+    os.path.join(BASE_DIR, "feature_columns.json"),
+    os.path.join(BASE_DIR, "model_artifacts", "feature_columns.json"),
+]
 
 @st.cache_resource
 def load_artifacts():
-    if not os.path.exists(MODEL_PATH):
-        st.error("Model file not found. Run the notebook and export model artifacts first.")
+    model_path = next((p for p in MODEL_CANDIDATES if os.path.exists(p)), None)
+    feature_path = next((p for p in FEATURE_CANDIDATES if os.path.exists(p)), None)
+
+    if model_path is None:
+        st.error(
+            "Model file not found. Upload depression_gbc.pkl in the app folder or model_artifacts/."
+        )
         st.stop()
-    if not os.path.exists(FEATURE_PATH):
-        st.error("Feature columns file not found. Run the notebook and export model artifacts first.")
+    if feature_path is None:
+        st.error(
+            "Feature columns file not found. Upload feature_columns.json in the app folder or model_artifacts/."
+        )
         st.stop()
 
-    model = joblib.load(MODEL_PATH)
-    with open(FEATURE_PATH, "r", encoding="utf-8") as f:
+    model = joblib.load(model_path)
+    with open(feature_path, "r", encoding="utf-8") as f:
         feature_columns = json.load(f)
     return model, feature_columns
 
